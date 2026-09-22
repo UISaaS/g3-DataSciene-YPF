@@ -1,135 +1,167 @@
-Análisis exploratorio de pozos no convencionales de YPF en Vaca Muerta
-Grupo 3 --- 
-Conformado por: Hugo Espinosa, Martina Sarmiento y Paula Perez Gianolini. 
-Primera entrega: exploración, transformación y
-visualización de datos con Pandas
-Descripción del proyecto
-Este proyecto estudia pozos no convencionales asociados a la formación
-Vaca Muerta operados por YPF, integrando información técnica de los
-pozos con sus registros históricos mensuales de producción.
-La primera entrega se concentra en el Análisis Exploratorio de Datos
-(AED): comprensión y calidad de los datos, transformaciones,
-visualizaciones y análisis descriptivos. El trabajo deja planteada una
-base para una etapa posterior de Machine Learning, pero no desarrolla
-modelos predictivos en esta entrega.
-Objetivo general
-Analizar el comportamiento productivo de los pozos no convencionales de
-YPF asociados a la formación Vaca Muerta durante sus primeros dos años
-de operación, integrando la información técnica de los pozos con sus
-registros históricos mensuales de producción.
-A través del AED se busca comprender la estructura y calidad de los
-datasets, realizar las transformaciones necesarias y caracterizar cuánto
-produce un pozo típico en ese período y qué tan distinto es ese volumen
-entre pozos.
-Pregunta de investigación
-¿Cuánto petróleo produce un pozo no convencional de YPF en Vaca Muerta
-durante sus primeros 24 meses de operación, cómo se distribuye esa
-producción a lo largo de esos meses y qué tan distinta es entre pozos?
-Como preguntas complementarias, el notebook analiza:
-en qué parte de esos 24 meses se concentra la producción;
-diferencias de producción según área y tipo de pozo;
-posibles caídas de producción coincidentes con la perforación de un
-pozo vecino cercano, como análisis exploratorio de potencial
-interferencia entre pozos.
-El análisis de interferencia es asociativo y exploratorio y no
-pretende establecer causalidad.
-Fuentes de datos
-Se utilizan dos fuentes publicadas por la Secretaría de Energía de la
-Nación:
-Capítulo IV --- Listado de pozos: contiene información
-descriptiva y técnica de los pozos, como área, yacimiento,
-profundidad, tipo de pozo, sistema de extracción, estado y fechas de
-perforación y terminación. Su granularidad es una fila por pozo.
-Producción de pozos de gas y petróleo no convencional: contiene
-registros mensuales de producción de petróleo, gas y agua, junto con
-variables operativas. Su granularidad es una fila por pozo y mes.
-Ambos datasets comparten el identificador `idpozo`, utilizado para
-relacionar la información técnica con la productiva.
-Definición del universo de análisis
-En el dataset técnico se seleccionan los pozos que cumplen
-simultáneamente los siguientes criterios:
-empresa cuya razón social contiene `YPF`;
-recurso `NO CONVENCIONAL`;
-formación `vaca muerta`.
-YSUR queda excluida deliberadamente porque aparece identificada por
-separado y su denominación no contiene la cadena `YPF`.
-Luego del filtrado, el dataset técnico contiene 1.818 pozos únicos.
-En el dataset productivo, el filtro inicial de YPF y Vaca Muerta
-contiene 142.979 registros mensuales correspondientes a 1.890 pozos.
-Al comparar ambas fuentes se obtienen:
-1.818 pozos presentes en ambos datasets.
-Para mantener consistencia entre las fuentes, el análisis productivo se
-restringe a los pozos presentes en ambos datasets. El universo
-resultante contiene 141.920 registros mensuales y 1.818 pozos
-únicos.
-No se detectaron filas duplicadas ni registros duplicados para una misma
-combinación de `idpozo`, año y mes.
-Preparación y transformación de los datos
-Entre las tareas realizadas se encuentran:
-revisión de valores faltantes y columnas sin capacidad informativa;
-conversión de fechas de perforación y terminación a `datetime`;
-cálculo de duraciones de perforación y terminación;
-tratamiento auxiliar de profundidades iguales a cero sin eliminar
-los registros originales;
-construcción de variables temporales para ordenar la historia
-mensual de cada pozo;
-separación de meses con actividad mediante el criterio `tef > 0`;
-cálculo de caudales normalizados a partir de la producción y el
-tiempo efectivo informado;
-transformación `log1p` para explorar variables productivas con
-fuerte asimetría; integración de información técnica y productiva mediante `idpozo`.
-El período presente en el dataset productivo analizado se extiende desde
+# Análisis de producción de pozos no convencionales en Vaca Muerta
 
-Análisis exploratorio
-El notebook analiza características técnicas y operativas como:
-profundidad;
-duración de perforación y terminación;
-tipo de pozo;
-sistema de extracción;
-clasificación y subclasificación;
-área.
-También se estudian las distribuciones de producción de petróleo, gas y
-agua. Las variables productivas presentan una marcada asimetría positiva
-y una proporción relevante de registros iguales a cero.
-Los valores potencialmente atípicos se estudian mediante boxplots, rango
-intercuartílico y revisión de caudales extremos. No se eliminan
-observaciones automáticamente por ser identificadas como atípicas, ya
-que pueden corresponder a comportamientos reales del proceso productivo.
-Además, se comprobó que `tipopozo` y `tipoextraccion` pueden cambiar a
-lo largo de la historia de un mismo pozo. Por ese motivo, las
-comparaciones que utilizan estas variables dentro del dataset productivo
-se interpretan a nivel de registro mensual y no como características
-necesariamente fijas durante toda la vida del pozo.
-Comparaciones entre grupos
-Como contexto para la pregunta principal se comparan los niveles de
-producción según:
-tipo de pozo;
-sistema de extracción;
-área.
-Para el análisis por área se incorpora la información técnica mediante
-un `merge` por `idpozo`. La comparación gráfica se concentra en siete
-áreas seleccionadas por su cantidad de pozos, que reúnen 1.655 pozos
-y representan 94,92 % del universo activo utilizado en esa
-comparación.
-Las diferencias encontradas son descriptivas y no se interpretan como
-relaciones causales.
-Análisis de los primeros 24 meses
-Según el criterio temporal implementado actualmente en el notebook:
-1.805 pozos cuentan con registros de producción en el universo
-activo;
-1.404 pozos tienen 24 meses o más de historia según la variable
-temporal construida;
-401 pozos quedan fuera por historia insuficiente;
-el cálculo final de producción acumulada de petróleo de los primeros
-24 meses incluye 1.313 pozos.
-Para esos 1.313 pozos, la producción acumulada de petróleo calculada en
-el notebook presenta:
-media: 33.311;
-mediana: 29.639;
-primer cuartil: 4.810;
-tercer cuartil: 56.772;
-máximo: 144.063.
-La dispersión observada muestra que el volumen acumulado durante la
-ventana analizada varía considerablemente entre pozos.
-El notebook también calcula qué proporción del acumulado de 24 meses
-corresponde a los primeros seis meses. La mediana obtenida es 38,7%.
+## Grupo 3 — Data Science YPF
+
+**Integrantes:** Hugo Espinosa · Martina Sarmiento · Paula Pérez Gianolini  
+**Entrega:** Análisis exploratorio, transformación y visualización de datos con Pandas
+
+---
+
+## Pregunta de investigación
+
+> **¿Cómo varía la producción mensual de los pozos no convencionales de YPF en Vaca Muerta según el área, el yacimiento, la formación y el período de producción?**
+
+El análisis busca comparar la producción de petróleo, gas y agua entre distintas zonas de desarrollo, considerando también la cantidad de pozos, la antigüedad productiva y la evolución temporal.
+
+---
+
+## Objetivo general
+
+Analizar el comportamiento productivo mensual de los pozos no convencionales de YPF asociados a la formación Vaca Muerta, integrando información técnica de los pozos con sus registros históricos de producción.
+
+El trabajo se concentra en el **Análisis Exploratorio de Datos (AED)** para:
+
+- comprender la estructura y calidad de las fuentes;
+- integrar información técnica y productiva mediante `idpozo`;
+- comparar la producción entre áreas, yacimientos y formaciones;
+- distinguir producción total de producción promedio por pozo;
+- estudiar la evolución de la producción a través del tiempo;
+- dejar una base preparada para una etapa posterior de Machine Learning.
+
+> Esta entrega no desarrolla modelos predictivos de Machine Learning.
+
+---
+
+## Alcance del análisis
+
+El universo principal está compuesto por pozos que cumplen simultáneamente:
+
+- empresa cuya razón social contiene `YPF`;
+- recurso `NO CONVENCIONAL`;
+- formación `vaca muerta`.
+
+`YSUR` queda excluida deliberadamente porque aparece identificada por separado en las fuentes. Por lo tanto, los resultados representan la operación directa identificada como `YPF S.A.` y no necesariamente al grupo económico completo.
+
+---
+
+## Fuentes de datos
+
+Las fuentes son datasets públicos de la Secretaría de Energía de la Nación.
+
+### Capítulo IV — Pozos
+
+Contiene información técnica y descriptiva, con una fila por pozo:
+
+- `idpozo`;
+- área;
+- yacimiento;
+- formación;
+- cuenca;
+- provincia;
+- profundidad;
+- tipo de pozo;
+- sistema de extracción;
+- fechas de perforación y terminación;
+- coordenadas.
+
+[Consultar dataset Capítulo IV — Pozos](https://datos.energia.gob.ar/dataset/produccion-de-petroleo-y-gas-por-pozo/archivo/cb5c0f04-7835-45cd-b982-3e25ca7d7751)
+
+### Producción de pozos no convencionales
+
+Contiene registros mensuales, con una fila por pozo y mes:
+
+- `idpozo`;
+- año y mes;
+- `prod_pet`;
+- `prod_gas`;
+- `prod_agua`;
+- `tef`;
+- tipo de recurso;
+- clasificación;
+- provincia;
+- coordenadas.
+
+[Consultar dataset de producción no convencional](https://datos.energia.gob.ar/dataset/produccion-de-petroleo-y-gas-por-pozo/archivo/b5b58cdc-9e07-41f9-b392-fb9ec68b0725)
+
+Ambas fuentes se relacionan mediante el identificador `idpozo`.
+
+---
+
+## Metodología
+
+1. Exploración inicial de las fuentes.
+2. Revisión de tipos de datos, valores faltantes y duplicados.
+3. Verificación de la granularidad de cada dataset.
+4. Conversión y validación de fechas.
+5. Cálculo de duraciones operativas.
+6. Construcción de variables temporales, incluido el mes de vida productiva.
+7. Separación de meses activos mediante `tef > 0`.
+8. Cálculo de caudales normalizados por días efectivos.
+9. Transformación `log1p` para explorar distribuciones asimétricas.
+10. Integración de las fuentes mediante `idpozo`.
+11. Comparación de producción por área, tipo de pozo y sistema de extracción.
+12. Análisis temporal de producción total y producción por pozo.
+13. Comparación complementaria de la producción acumulada durante los primeros 24 meses.
+
+---
+
+## Criterios de comparación
+
+No se comparan únicamente los volúmenes totales, porque un área con más pozos naturalmente puede producir más. Por eso se consideran conjuntamente:
+
+- producción total;
+- cantidad de pozos;
+- producción media por pozo;
+- producción mediana por pozo;
+- dispersión de la producción;
+- evolución mensual;
+- antigüedad productiva.
+
+Las diferencias observadas son descriptivas y no se interpretan automáticamente como relaciones causales.
+
+---
+
+## Resultados exploratorios actuales
+
+- El universo técnico contiene **1.818 pozos únicos**.
+- El universo productivo integrado contiene **141.920 registros mensuales**.
+- Se identifican **1.818 pozos presentes en ambas fuentes**.
+- No se detectan duplicados en la combinación `idpozo`–año–mes.
+- Las variables productivas presentan fuerte asimetría y una proporción importante de registros iguales a cero.
+- El análisis por área se concentra en siete áreas con al menos 50 pozos, que representan aproximadamente el **94,92 %** del universo activo de esa comparación.
+- La producción acumulada durante los primeros 24 meses muestra una dispersión considerable entre pozos.
+
+---
+
+## Limitaciones
+
+- La producción disponible es principalmente mensual.
+- La base pública no informa necesariamente capacidad máxima o potencial del pozo.
+- No se dispone de presión de fondo, geometría completa de fracturas ni eventos operativos detallados.
+- Las diferencias entre áreas pueden estar influenciadas por antigüedad, cantidad de pozos, tipo de pozo y sistema de extracción.
+- Los meses más recientes pueden estar parcialmente cargados.
+- El análisis de interferencia entre pozos, incluido en el notebook como exploración complementaria, no confirma causalidad ni *frac-hits*.
+
+---
+
+## Próximos pasos
+
+- Profundizar la comparación por `area`, `yacimiento` y `formacion`.
+- Analizar por separado petróleo y gas, respetando sus unidades.
+- Incorporar intervalos de incertidumbre y tamaños de muestra.
+- Evaluar diferencias entre áreas controlando por antigüedad y cantidad de pozos.
+- Definir, después del AED, si existe una pregunta adecuada para una etapa de Machine Learning.
+
+---
+
+## Estructura del repositorio
+
+```text
+.
+├── README.md
+└── grupo_3_data_science.ipynb
+```
+
+## Notebook principal
+
+[ Abrir notebook de análisis exploratorio ](./grupo_3_data_science.ipynb)
