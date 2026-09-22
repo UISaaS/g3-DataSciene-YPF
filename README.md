@@ -1,160 +1,126 @@
-# Análisis de producción de pozos no convencionales en Vaca Muerta
+# 🛢️ Producción de pozos no convencionales en Vaca Muerta
 
-## Grupo 3 — Data Science YPF
+## Grupo 3 · Data Science YPF
 
 **Integrantes:** Hugo Espinosa · Martina Sarmiento · Paula Pérez Gianolini  
-**Entrega:** Análisis exploratorio, transformación y visualización de datos con Pandas
+**Entrega:** AED, transformación y visualización con Pandas
+
+> **Estado del proyecto:** exploración de datos · sin modelo predictivo en esta entrega
 
 ---
 
-## Pregunta de investigación
+## 🎯 Pregunta de investigación
 
 > **¿Cómo varía la producción mensual de los pozos no convencionales de YPF en Vaca Muerta según el área, el yacimiento, la formación y el período de producción?**
 
-El análisis busca comparar la producción de petróleo, gas y agua entre distintas zonas de desarrollo, considerando también la cantidad de pozos, la antigüedad productiva y la evolución temporal.
+Buscamos comparar petróleo, gas y agua considerando también la cantidad de pozos, su antigüedad productiva y la evolución temporal.
+
+## 🔎 Objetivos
+
+- Comprender la estructura y calidad de los datasets.
+- Integrar información técnica y productiva mediante `idpozo`.
+- Comparar la producción entre áreas, yacimientos y formaciones.
+- Diferenciar producción total de producción por pozo.
+- Analizar la evolución mensual y dejar una base preparada para una etapa posterior de Machine Learning.
 
 ---
 
-## Objetivo general
+## 🧭 Alcance
 
-Analizar el comportamiento productivo mensual de los pozos no convencionales de YPF asociados a la formación Vaca Muerta, integrando información técnica de los pozos con sus registros históricos de producción.
+El universo incluye pozos que cumplen simultáneamente:
 
-El trabajo se concentra en el **Análisis Exploratorio de Datos (AED)** para:
+| Criterio | Selección |
+|---|---|
+| Empresa | Razón social que contiene `YPF` |
+| Recurso | `NO CONVENCIONAL` |
+| Formación | `vaca muerta` |
 
-- comprender la estructura y calidad de las fuentes;
-- integrar información técnica y productiva mediante `idpozo`;
-- comparar la producción entre áreas, yacimientos y formaciones;
-- distinguir producción total de producción promedio por pozo;
-- estudiar la evolución de la producción a través del tiempo;
-- dejar una base preparada para una etapa posterior de Machine Learning.
-
-> Esta entrega no desarrolla modelos predictivos de Machine Learning.
+> `YSUR` se excluye deliberadamente porque aparece identificada por separado. Por eso, los resultados representan la operación directa identificada como `YPF S.A.` y no necesariamente al grupo económico completo.
 
 ---
 
-## Alcance del análisis
+## 🗃️ Fuentes de datos
 
-El universo principal está compuesto por pozos que cumplen simultáneamente:
+| Dataset | Granularidad | Información principal |
+|---|---|---|
+| **Capítulo IV — Pozos** | Una fila por pozo | Área, yacimiento, formación, profundidad, fechas, coordenadas y tipo de pozo |
+| **Producción no convencional** | Una fila por pozo y mes | Petróleo, gas, agua, `tef`, año, mes y variables operativas |
 
-- empresa cuya razón social contiene `YPF`;
-- recurso `NO CONVENCIONAL`;
-- formación `vaca muerta`.
+- [📍 Capítulo IV — Pozos](https://datos.energia.gob.ar/dataset/produccion-de-petroleo-y-gas-por-pozo/archivo/cb5c0f04-7835-45cd-b982-3e25ca7d7751)
+- [📈 Producción de pozos no convencionales](https://datos.energia.gob.ar/dataset/produccion-de-petroleo-y-gas-por-pozo/archivo/b5b58cdc-9e07-41f9-b392-fb9ec68b0725)
 
-`YSUR` queda excluida deliberadamente porque aparece identificada por separado en las fuentes. Por lo tanto, los resultados representan la operación directa identificada como `YPF S.A.` y no necesariamente al grupo económico completo.
-
----
-
-## Fuentes de datos
-
-Las fuentes son datasets públicos de la Secretaría de Energía de la Nación.
-
-### Capítulo IV — Pozos
-
-Contiene información técnica y descriptiva, con una fila por pozo:
-
-- `idpozo`;
-- área;
-- yacimiento;
-- formación;
-- cuenca;
-- provincia;
-- profundidad;
-- tipo de pozo;
-- sistema de extracción;
-- fechas de perforación y terminación;
-- coordenadas.
-
-[Consultar dataset Capítulo IV — Pozos](https://datos.energia.gob.ar/dataset/produccion-de-petroleo-y-gas-por-pozo/archivo/cb5c0f04-7835-45cd-b982-3e25ca7d7751)
-
-### Producción de pozos no convencionales
-
-Contiene registros mensuales, con una fila por pozo y mes:
-
-- `idpozo`;
-- año y mes;
-- `prod_pet`;
-- `prod_gas`;
-- `prod_agua`;
-- `tef`;
-- tipo de recurso;
-- clasificación;
-- provincia;
-- coordenadas.
-
-[Consultar dataset de producción no convencional](https://datos.energia.gob.ar/dataset/produccion-de-petroleo-y-gas-por-pozo/archivo/b5b58cdc-9e07-41f9-b392-fb9ec68b0725)
-
-Ambas fuentes se relacionan mediante el identificador `idpozo`.
+Ambas fuentes se integran mediante `idpozo`.
 
 ---
 
-## Metodología
+## ⚙️ Metodología
 
-1. Exploración inicial de las fuentes.
-2. Revisión de tipos de datos, valores faltantes y duplicados.
-3. Verificación de la granularidad de cada dataset.
-4. Conversión y validación de fechas.
-5. Cálculo de duraciones operativas.
-6. Construcción de variables temporales, incluido el mes de vida productiva.
-7. Separación de meses activos mediante `tef > 0`.
-8. Cálculo de caudales normalizados por días efectivos.
-9. Transformación `log1p` para explorar distribuciones asimétricas.
-10. Integración de las fuentes mediante `idpozo`.
-11. Comparación de producción por área, tipo de pozo y sistema de extracción.
-12. Análisis temporal de producción total y producción por pozo.
-13. Comparación complementaria de la producción acumulada durante los primeros 24 meses.
+```text
+Explorar → Auditar → Transformar → Integrar → Comparar → Visualizar
+```
+
+### Principales transformaciones
+
+- ✅ Conversión y validación de fechas.
+- ✅ Duración de perforación y terminación.
+- ✅ Mes de vida productiva.
+- ✅ Separación de meses activos mediante `tef > 0`.
+- ✅ Caudales normalizados por días efectivos.
+- ✅ Transformación `log1p` para distribuciones asimétricas.
+- ✅ Integración de datasets por `idpozo`.
+- ✅ Comparación por área, tipo de pozo y sistema de extracción.
 
 ---
 
-## Criterios de comparación
+## 📊 Criterios de comparación
 
-No se comparan únicamente los volúmenes totales, porque un área con más pozos naturalmente puede producir más. Por eso se consideran conjuntamente:
+No comparamos solamente los totales: un área con más pozos naturalmente puede producir más. Por eso analizamos conjuntamente:
 
 - producción total;
 - cantidad de pozos;
-- producción media por pozo;
-- producción mediana por pozo;
-- dispersión de la producción;
+- media y mediana por pozo;
+- dispersión;
 - evolución mensual;
 - antigüedad productiva.
 
-Las diferencias observadas son descriptivas y no se interpretan automáticamente como relaciones causales.
+Las diferencias observadas son **descriptivas** y no se interpretan automáticamente como relaciones causales.
 
 ---
 
-## Resultados exploratorios actuales
+## 📌 Resultados exploratorios actuales
 
-- El universo técnico contiene **1.818 pozos únicos**.
-- El universo productivo integrado contiene **141.920 registros mensuales**.
-- Se identifican **1.818 pozos presentes en ambas fuentes**.
-- No se detectan duplicados en la combinación `idpozo`–año–mes.
-- Las variables productivas presentan fuerte asimetría y una proporción importante de registros iguales a cero.
-- El análisis por área se concentra en siete áreas con al menos 50 pozos, que representan aproximadamente el **94,92 %** del universo activo de esa comparación.
-- La producción acumulada durante los primeros 24 meses muestra una dispersión considerable entre pozos.
+- **1.818** pozos técnicos únicos.
+- **141.920** registros mensuales integrados.
+- **1.818** pozos presentes en ambas fuentes.
+- Sin duplicados en la combinación `idpozo`–año–mes.
+- Siete áreas concentran aproximadamente el **94,92 %** del universo activo utilizado en la comparación por área.
+- La producción presenta fuerte asimetría y una proporción importante de registros iguales a cero.
+- La producción acumulada en los primeros 24 meses presenta una dispersión considerable entre pozos.
 
 ---
 
-## Limitaciones
+## ⚠️ Limitaciones
 
 - La producción disponible es principalmente mensual.
-- La base pública no informa necesariamente capacidad máxima o potencial del pozo.
+- La base pública no informa necesariamente la capacidad máxima o potencial del pozo.
 - No se dispone de presión de fondo, geometría completa de fracturas ni eventos operativos detallados.
 - Las diferencias entre áreas pueden estar influenciadas por antigüedad, cantidad de pozos, tipo de pozo y sistema de extracción.
 - Los meses más recientes pueden estar parcialmente cargados.
-- El análisis de interferencia entre pozos, incluido en el notebook como exploración complementaria, no confirma causalidad ni *frac-hits*.
+- El análisis exploratorio de interferencia no confirma causalidad ni *frac-hits*.
 
 ---
 
-## Próximos pasos
+## 🚀 Próximos pasos
 
-- Profundizar la comparación por `area`, `yacimiento` y `formacion`.
-- Analizar por separado petróleo y gas, respetando sus unidades.
-- Incorporar intervalos de incertidumbre y tamaños de muestra.
-- Evaluar diferencias entre áreas controlando por antigüedad y cantidad de pozos.
-- Definir, después del AED, si existe una pregunta adecuada para una etapa de Machine Learning.
+1. Profundizar la comparación por `area`, `yacimiento` y `formacion`.
+2. Analizar petróleo y gas por separado, respetando sus unidades.
+3. Controlar diferencias de antigüedad y cantidad de pozos.
+4. Incorporar intervalos de incertidumbre y tamaños de muestra.
+5. Evaluar, después del AED, si corresponde construir un modelo de Machine Learning.
 
 ---
 
-## Estructura del repositorio
+## 📁 Estructura del repositorio
 
 ```text
 .
@@ -162,6 +128,6 @@ Las diferencias observadas son descriptivas y no se interpretan automáticamente
 └── grupo_3_data_science.ipynb
 ```
 
-## Notebook principal
+## 📓 Notebook principal
 
-[ Abrir notebook de análisis exploratorio ](./grupo_3_data_science.ipynb)
+[▶️ Abrir el notebook de análisis exploratorio](./grupo_3_data_science.ipynb)
